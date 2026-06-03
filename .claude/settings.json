@@ -1,0 +1,99 @@
+{
+  "permissions": {
+    "allow": [
+    ],
+    "defaultMode": "default",
+    "additionalDirectories": [
+    ]
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); MSG=$(echo \"$INPUT\" | jq -r '.message'); TITLE=$(echo \"$INPUT\" | jq -r '.title'); CWD=$(echo \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$MSG\" -title \"$TITLE [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); MSG=$(echo \"$INPUT\" | jq -r '.message // .question // \"入力待ちです\"'); TITLE=$(echo \"$INPUT\" | jq -r '.title // \"❓⏳\"'); CWD=$(echo \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$MSG\" -title \"$TITLE [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); Q=$(echo \"$INPUT\" | jq -r '.tool_input.questions[0].question // \"入力待ちです\"' | head -c 120); CWD=$(echo \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$Q\" -title \"❓⏳ [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty' | head -c 120); CWD=$(echo \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$ $CMD\" -title \"👾⏳ [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); TOOL=$(echo \"$INPUT\" | sed -nE 's/.*\"tool_name\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/p' | head -1); FILE=$(echo \"$INPUT\" | sed -nE 's/.*\"(file_path|notebook_path)\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\2/p' | head -1 | head -c 200); CWD=$(echo \"$INPUT\" | sed -nE 's/.*\"cwd\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/p' | head -1); case \"$TOOL\" in Write) ICON=\"✚\";; *) ICON=\"✏️\";; esac; case \"$FILE\" in \"$CWD\"/*) DISPLAY=\"./${FILE#$CWD/}\";; *) DISPLAY=\"$FILE\";; esac; PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$ICON $DISPLAY\" -title \"📝⏳ [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); URL=$(echo \"$INPUT\" | jq -r '.tool_input.url // empty' | head -c 200); CWD=$(echo \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$URL\" -title \"🔎⏳ [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); CWD=$(echo \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=$(basename \"$CWD\"); TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"プラン承認待ち\" -title \"📋⏳ [$PROJECT] $TIMESTAMP\" -sound Purr -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\" -activate \"com.microsoft.VSCode\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); TRANSCRIPT=$(printf '%s' \"$INPUT\" | jq -r '.transcript_path // empty'); CWD=$(printf '%s' \"$INPUT\" | jq -r '.cwd // empty'); PROJECT=\"\"; [ -n \"$CWD\" ] && PROJECT=$(basename \"$CWD\"); TITLE_SHORT=\"\"; if [ -n \"$TRANSCRIPT\" ] && [ -f \"$TRANSCRIPT\" ]; then TITLE=$(jq -rs '[.[] | select(.type==\"user\") | .message.content[]? | select(.type==\"text\" and (.text|startswith(\"<\")|not)) | .text] | last // empty' \"$TRANSCRIPT\" 2>/dev/null | grep -v '^[[:space:]]*$' | head -1); TITLE_SHORT=$(printf '%s' \"$TITLE\" | tr -s '[:space:]' '\\n' | head -8 | tr '\\n' ' ' | sed 's/[[:space:]]*$//'); fi; MSG=\"${TITLE_SHORT:-Completed!}\"; TIMESTAMP=$(date +\"%H:%M:%S\"); $HOMEBREW_PREFIX/bin/terminal-notifier -message \"$MSG\" -title \"✅ [$PROJECT] $TIMESTAMP\" -sound Purr -activate \"com.microsoft.VSCode\" -contentImage \"$HOME/.claude/user-defined/claudecode-icon.png\""
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "effortLevel": "high",
+  "autoUpdatesChannel": "stable"
+}

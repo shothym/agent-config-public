@@ -8,7 +8,8 @@
 ```
 brew install terminal-notifier
 ```
-2. ./scripts/install-claude-symlinks.sh を実行して、シンボリックリンクを作成
+2. `./scripts/install-claude-symlinks.sh` を実行して、シンボリックリンクを作成
+    - settings.jsonに必要な項目はあらかじめ./.claude/settings.jsonに追加してから実行してください。（e.g. permissions, enabledPlugin, etc.）
 3. mac側の設定でterminal-notifierからの通知を許可する。（設定 > 通知 > アプリケーションの通知 > terminal-notifier）
 
 ### 設定の反映

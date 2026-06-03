@@ -12,6 +12,8 @@ brew install terminal-notifier
     - settings.jsonに必要な項目はあらかじめ./.claude/settings.jsonに追加してから実行してください。（e.g. permissions, enabledPlugin, etc.）
 3. mac側の設定でterminal-notifierからの通知を許可する。（設定 > 通知 > アプリケーションの通知 > terminal-notifier）
 
+もし通知が鳴らない場合は、`terminal-notifier` コマンドが正しくインストールされているか、ターミナルから直接 `$HOMEBREW_PREFIX/bin/terminal-notifier -message "Test notification"` を実行してみてください。通知が表示されない場合は、Macの通知設定を確認し、ターミナルからの通知が許可されていることやコマンドのパスを確認してください。
+
 ### 設定の反映
 
 ```bash
